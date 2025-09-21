@@ -14,6 +14,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Derive short commit id
+        id: vars
+        run: echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -35,10 +39,10 @@ jobs:
       - name: Publish bundle to GitHub Releases
         uses: ncipollo/release-action@v1
         with:
-          tag: mcpb-${{ github.sha }}
-          name: MCP Bundle ${{ github.sha }}
+          tag: mcpb-${{ steps.vars.outputs.short_sha }}
+          name: MCP Bundle ${{ steps.vars.outputs.short_sha }}
           body: |
-            Automated MCP bundle for commit ${{ github.sha }}.
+            Automated MCP bundle for commit ${{ steps.vars.outputs.short_sha }}.
             Download the attached `anki-mcp.mcpb` file and import it into Claude Desktop.
           prerelease: true
           draft: false
