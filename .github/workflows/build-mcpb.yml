@@ -1,0 +1,49 @@
+name: Build MCP Bundle
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  package-mcp:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build MCP bundle
+        run: npm run pack:mcpb
+
+      - name: Upload bundle as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anki-mcp
+          path: dist/anki-mcp.mcpb
+
+      - name: Publish bundle to GitHub Releases
+        uses: ncipollo/release-action@v1
+        with:
+          tag: mcpb-${{ github.sha }}
+          name: MCP Bundle ${{ github.sha }}
+          body: |
+            Automated MCP bundle for commit ${{ github.sha }}.
+            Download the attached `anki-mcp.mcpb` file and import it into Claude Desktop.
+          prerelease: true
+          draft: false
+          allowUpdates: true
+          artifacts: dist/anki-mcp.mcpb
+          artifactContentType: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
